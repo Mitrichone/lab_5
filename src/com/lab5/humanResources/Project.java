@@ -304,9 +304,9 @@ public class Project implements EmployeeGroup{
 
     @Override
     public boolean addAll(Collection<? extends Employee> c) {
-        boolean addAll = true;
+        boolean addAll = false;
         for (Employee employee: c) {
-            addAll &= add(employee);
+            addAll |= add(employee);
         }
         return addAll;
     }
@@ -318,9 +318,9 @@ public class Project implements EmployeeGroup{
 
         if(c.size() == 0)
             return false;
-
-        for (Object o : c) {
-            add(index++, (Employee) o);
+//todo логично написать добавление ручками после нода getNode(index)
+        for (Employee o : c) {
+            add(index++, o);
         }
         return true;
     }
@@ -330,6 +330,7 @@ public class Project implements EmployeeGroup{
         Iterator<Employee> iterator = iterator();
         Node node = head;
         boolean changed = false;
+        //todo иди по своим нодам и проверяй есть ли value в c и если есть - удаляй ноду
         while(iterator.hasNext()) {
             Employee employee = iterator.next();
 
@@ -346,6 +347,8 @@ public class Project implements EmployeeGroup{
 
     @Override
     public boolean retainAll(Collection<?> c) {
+        //todo иди по своим нодам и проверяй есть ли value в c и если нет - удаляй ноду
+
         boolean changed = false;
         Node node = head;
         for(int i = 0; i < size; i++) {
@@ -368,6 +371,7 @@ public class Project implements EmployeeGroup{
 
     @Override
     public void clear() {
+        //todo пробегаешься по нодам и делаешь ВСЕ ссылки null во всех нодах
         head = null;
         tail = null;
         size = 0;
@@ -430,10 +434,11 @@ public class Project implements EmployeeGroup{
 
     @Override
     public void add(int index, Employee element) {
+        //todo учти, если index = 0 или size-1
         if(index < 0 || index >= size)
             throw new IndexOutOfBoundsException();
 
-        ListIterator<Employee> listIterator = listIterator(index);
+        //ListIterator<Employee> listIterator = listIterator(index);
 
         Node node = getNode(index);
         Node newNode = new Node(element);
@@ -449,6 +454,7 @@ public class Project implements EmployeeGroup{
 
     @Override
     public Employee remove(int index) {
+        //todo учти особенности удаления при index = 0 или size-1
         Node node = getNode(index);
         Employee employee = node.value;
 
@@ -486,6 +492,7 @@ public class Project implements EmployeeGroup{
         return listIterator(0);
     }
 
+    //todo та же фигня, что и в департаменте
     @Override
     public ListIterator<Employee> listIterator(int index) {
         if(index < 0 || index > size)
@@ -540,6 +547,7 @@ public class Project implements EmployeeGroup{
         };
     }
 
+    //todo та же фигня, что и в департаменте
     @Override
     public List<Employee> subList(int fromIndex, int toIndex){
         if(fromIndex < 0 || toIndex > size || fromIndex > toIndex)

@@ -318,16 +318,16 @@ public class Department implements EmployeeGroup {
 
     @Override
     public boolean addAll(Collection<? extends Employee> c) {
-        boolean addAll = true;
+        boolean addAll = false;
 
         if(size + c.size() > employees.length){
-            Employee[] newEmployees = new Employee[this.size * 2];
+            Employee[] newEmployees = new Employee[this.size * 2 + c.size()];
             System.arraycopy(this.employees, 0, newEmployees, 0, this.size);
             this.employees = newEmployees;
         }
 
         for (Employee employee: c) {
-            addAll &= add(employee);
+            addAll |= add(employee);
         }
         return addAll;
     }
@@ -338,7 +338,7 @@ public class Department implements EmployeeGroup {
             throw new IndexOutOfBoundsException();
 
         if(size + c.size() > employees.length){
-            Employee[] newEmployees = new Employee[employees.length * 2];
+            Employee[] newEmployees = new Employee[employees.length * 2 + c.size()];
             System.arraycopy(employees, 0, newEmployees, 0, size);
             this.employees = newEmployees;
         }
@@ -350,15 +350,17 @@ public class Department implements EmployeeGroup {
         if(c.size() == 0)
             return false;
 
-        for (Object o : c) {
-            employees[index++] = (Employee) o;
+        for (Employee o : c) {
+            //Todo проверить сначала наличие сотрудника
+            employees[index++] = o;
+            size++;
         }
-        size += c.size();
         return true;
     }
 
     @Override
     public boolean removeAll(Collection<?> c) {
+        //todo foreach по c
         Iterator<Employee> iterator = iterator();
         boolean changed = false;
         while(iterator.hasNext()) {
@@ -377,6 +379,7 @@ public class Department implements EmployeeGroup {
 
     @Override
     public boolean retainAll(Collection<?> c) {
+        //todo foreach по c
         boolean changed = false;
         for(int i = 0; i < size; i++) {
             Iterator<?> iterator = c.iterator();
@@ -397,7 +400,9 @@ public class Department implements EmployeeGroup {
 
     @Override
     public void clear() {
-        employees = new Employee[employees.length];
+        //employees = new Employee[employees.length];
+        //todo ручками делаешь каждый элемент = null
+        //Arrays.fill(employees, null);
         size = 0;
     }
 
@@ -454,7 +459,7 @@ public class Department implements EmployeeGroup {
     public void add(int index, Employee element) {
         if(index < 0 || index >= size)
             throw new IndexOutOfBoundsException();
-
+        //todo расширь массив и вообще операцию expand вынеси в отдельный приватный метод
         if(index < size - 1)
             System.arraycopy(this.employees, index, this.employees, index + 1, this.size - (index + 1));
 
@@ -530,7 +535,7 @@ public class Department implements EmployeeGroup {
             public int previousIndex() {
                 return pos - 1;
             }
-
+            //todo должен соответсвовать контракту
             public void remove() {
                 department.remove(pos);
             }
@@ -550,9 +555,14 @@ public class Department implements EmployeeGroup {
         if(fromIndex < 0 || toIndex > size || fromIndex > toIndex)
             throw new IndexOutOfBoundsException();
         if(fromIndex == toIndex)
-            return null;
+            return null; //todo  пустой департамент
+        /*
+        Department dep = new Department(this.name, toIndex - fromIndex);
+        dep.employees;
+        dep.size;
+        */
 
-        List<Employee> subList = new ArrayList<>();
+        List<Employee> subList = new ArrayList<>(); //todo департамент но с заданными эмплоями
         ListIterator<Employee> iterator = listIterator(fromIndex);
 
         while(iterator.previousIndex() < toIndex)

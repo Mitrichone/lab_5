@@ -12,5 +12,6 @@ public class Main {
         department.add(new StaffEmployee("Дмитрий", "Дмитриев",JobTitlesEnum.ADMINISTRATOR, 99, 200));
         Employee[] emp = department.sortedEmployees();
         System.out.println();
+        //todo Эпичный тестовый класс
     }
 }
