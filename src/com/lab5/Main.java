@@ -20,6 +20,7 @@ public class Main {
             System.out.print(departmentsManager.get(i).getName());
         System.out.println();
 
+
         departmentsManager.remove(0);
         for (int i = 0; i < departmentsManager.size(); i++)
             System.out.print(departmentsManager.get(i).getName());
