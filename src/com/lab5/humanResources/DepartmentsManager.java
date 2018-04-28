@@ -28,6 +28,7 @@ public class DepartmentsManager implements GroupsManager{
     public DepartmentsManager(String name, EmployeeGroup[] employeeGroups){
         this.name = name;
         this.size = employeeGroups.length;
+        this.employeeGroups = new EmployeeGroup[size];
         System.arraycopy(employeeGroups, 0, this.employeeGroups, 0, employeeGroups.length);
     }
     //endregion
@@ -91,7 +92,7 @@ public class DepartmentsManager implements GroupsManager{
     public int employeeQuantity(){
         int employeesQuantity = 0;
         for(int i = 0; i < size; i++)
-            employeesQuantity += this.employeeGroups[i].employeeQuantity();
+            employeesQuantity += this.employeeGroups[i].size();
         return employeesQuantity;
     }
     public Employee mostValuableEmployee(){
@@ -127,8 +128,8 @@ public class DepartmentsManager implements GroupsManager{
     //endregion
 
     public boolean hasEmployeeGroup(String name){
-        for (EmployeeGroup employeeGroup: employeeGroups) {
-            if(employeeGroup.getName().equals(name))
+        for(int i = 0; i < size; i++) {
+            if(employeeGroups[i] != null && employeeGroups[i].getName().equals(name))
                 return true;
         }
         return false;
@@ -169,6 +170,14 @@ public class DepartmentsManager implements GroupsManager{
 
     //region Lab5 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
+    private void expand(int addSize){
+        if (this.size + addSize > this.employeeGroups.length){
+            EmployeeGroup[] newEmployeeGroups = new EmployeeGroup[this.size * 2 + addSize];
+            System.arraycopy(this.employeeGroups, 0, newEmployeeGroups, 0, this.size);
+            this.employeeGroups = newEmployeeGroups;
+        }
+    }
+
     @Override
     public int size() {
         return size;
@@ -198,7 +207,8 @@ public class DepartmentsManager implements GroupsManager{
             }
 
             public EmployeeGroup next() {
-                return employeeGroups[pos++];
+
+                return employeeGroups[(pos > size - 1)?(size-1):pos++];
             }
         };
     }
@@ -266,14 +276,17 @@ public class DepartmentsManager implements GroupsManager{
 
     @Override
     public boolean addAll(int index, Collection<? extends EmployeeGroup> c) {
-        if(index < 0 || index > size)
+        if(index < 0 || index > size - 1)
             throw new IndexOutOfBoundsException();
 
-        if(size + c.size() > employeeGroups.length){
-            EmployeeGroup[] newEmployeeGroups = new EmployeeGroup[employeeGroups.length * 2];
-            System.arraycopy(employeeGroups, 0, newEmployeeGroups, 0, size);
-            employeeGroups = newEmployeeGroups;
-        }
+        //////////////////////////////
+        int sizeCollection = c.size();
+        for (EmployeeGroup o : c)
+            if(contains(o))
+                sizeCollection--;
+        //////////////////////////////
+
+        expand(sizeCollection);
 
         if (index < size)
             System.arraycopy(employeeGroups, index, employeeGroups, index + c.size(),
@@ -282,26 +295,24 @@ public class DepartmentsManager implements GroupsManager{
         if(c.size() == 0)
             return false;
 
-        for (Object o : c) {
-            employeeGroups[index++] = (EmployeeGroup) o;
+        for (EmployeeGroup o : c) {
+            //todo *FIXED* проверить сначала наличие группы
+            if(!contains(o)) {
+                employeeGroups[index++] = o;
+                size++;
+            }
         }
-        size += c.size();
         return true;
     }
 
     @Override
     public boolean removeAll(Collection<?> c) {
-        Iterator<EmployeeGroup> iterator = iterator();
+        //todo *FIXED* foreach по c
         boolean changed = false;
-        while(iterator.hasNext()) {
-            EmployeeGroup employeeGroup = iterator.next();
-
-            for (int i = 0; i < size; i++) {
-                if (employeeGroup.equals(employeeGroups[i])) {
-                    remove(i);
-                    changed = true;
-                    break;
-                }
+        for (Object o: c) {
+            if(contains(o)){
+                remove(o);
+                changed = true;
             }
         }
         return changed;
@@ -309,18 +320,11 @@ public class DepartmentsManager implements GroupsManager{
 
     @Override
     public boolean retainAll(Collection<?> c) {
+        //todo *FIXED* foreach по c
         boolean changed = false;
-        for(int i = 0; i < size; i++) {
-            Iterator<?> iterator = c.iterator();
-            boolean hasTravel = false;
-            while (iterator.hasNext()) {
-                if (employeeGroups[i].equals(iterator.next())) {
-                    hasTravel = true;
-                    break;
-                }
-            }
-            if (!hasTravel) {
-                remove(i);
+        for (EmployeeGroup o: employeeGroups) {
+            if(!c.contains(o)){
+                remove(o);
                 changed = true;
             }
         }
@@ -329,7 +333,10 @@ public class DepartmentsManager implements GroupsManager{
 
     @Override
     public void clear() {
-        employeeGroups = new EmployeeGroup[employeeGroups.length];
+        //todo *FIXED* ручками делаешь каждый элемент = null
+        for (int i = 0; i < size; i++) {
+            employeeGroups[i] = null;
+        }
         size = 0;
     }
 
@@ -368,7 +375,7 @@ public class DepartmentsManager implements GroupsManager{
 
     @Override
     public EmployeeGroup get(int index) {
-        if(index < 0 || index > size)
+        if(index < 0 || index > size - 1)
             throw new IndexOutOfBoundsException();
 
         return employeeGroups[index];
@@ -376,6 +383,9 @@ public class DepartmentsManager implements GroupsManager{
 
     @Override
     public EmployeeGroup set(int index, EmployeeGroup element) {
+        if(index < 0 || index > size - 1)
+            throw new IndexOutOfBoundsException();
+
         EmployeeGroup employeeGroup = employeeGroups[index];
         employeeGroups[index] = element;
 
@@ -384,11 +394,15 @@ public class DepartmentsManager implements GroupsManager{
 
     @Override
     public void add(int index, EmployeeGroup element) {
-        if(index < 0 || index >= size)
+        if(index < 0 || index >= size - 1)
             throw new IndexOutOfBoundsException();
 
+        //todo *FIXED* расширь массив и вообще операцию expand вынеси в отдельный приватный метод
+
+        expand(1);
+
         if(index < size - 1)
-            System.arraycopy(employeeGroups, index, employeeGroups, index + 1, this.size - (index + 1));
+            System.arraycopy(employeeGroups, index, employeeGroups, index + 1, size - index);
 
         employeeGroups[index] = element;
         if(size < employeeGroups.length)
@@ -397,6 +411,9 @@ public class DepartmentsManager implements GroupsManager{
 
     @Override
     public EmployeeGroup remove(int index) {
+        if(index < 0 || index > size - 1)
+            throw new IndexOutOfBoundsException();
+
         EmployeeGroup employeeGroup = employeeGroups[index];
 
         if(index < this.size - 1)
@@ -432,19 +449,40 @@ public class DepartmentsManager implements GroupsManager{
 
     @Override
     public ListIterator<EmployeeGroup> listIterator(int index) {
-        if(index < 0 || index > size)
+        if(index < 0 || index > size - 1)
             throw new IndexOutOfBoundsException();
 
         DepartmentsManager departmentsManager = this;
         return new ListIterator<EmployeeGroup>() {
             int pos = index;
+            int newElementPos = 0;
+
+            ListIteratorOperation lastOperation = ListIteratorOperation.NONE;
+
+            private void illegalState(){
+                switch (lastOperation){
+                    case NONE:
+                        throw new IllegalStateException("Не были вызваны методы \"next()\" или \"previous()\"");
+                    case ADD:
+                        throw new IllegalStateException("Последний вызов: \"add()\"");
+                    case REMOVE:
+                        throw new IllegalStateException("Последний вызов: \"remove()\"");
+                }
+            }
 
             public boolean hasNext() {
                 return employeeGroups.length > pos;
             }
 
             public EmployeeGroup next() {
-                return employeeGroups[pos++];
+                switch (lastOperation) {
+                    case ADD:
+                        lastOperation = ListIteratorOperation.NEXT;
+                        return employeeGroups[pos];
+                    default:
+                        lastOperation = ListIteratorOperation.NEXT;
+                        return employeeGroups[(pos > size - 1)?(--pos):(pos++)];
+                }
             }
 
             public boolean hasPrevious() {
@@ -452,7 +490,15 @@ public class DepartmentsManager implements GroupsManager{
             }
 
             public EmployeeGroup previous() {
-                return employeeGroups[pos--];
+                switch (lastOperation) {
+                    case ADD:
+                        lastOperation = ListIteratorOperation.PREVIOUS;
+                        pos = newElementPos;
+                        return employeeGroups[pos];
+                    default:
+                        lastOperation = ListIteratorOperation.PREVIOUS;
+                        return employeeGroups[(pos < 0)?(++pos):(pos--)];
+                }
             }
 
             public int nextIndex() {
@@ -462,17 +508,63 @@ public class DepartmentsManager implements GroupsManager{
             public int previousIndex() {
                 return pos - 1;
             }
-
+            //todo *FIXED* должен соответсвовать контракту
             public void remove() {
-                departmentsManager.remove(pos);
+                switch (lastOperation) {
+                    case NEXT:
+                        departmentsManager.remove(--pos);
+                        break;
+                    case PREVIOUS:
+                        departmentsManager.remove(pos + 1);
+                        break;
+                    default:
+                        illegalState();
+                }
+                lastOperation = ListIteratorOperation.REMOVE;
             }
 
             public void set(EmployeeGroup employeeGroup) {
-                departmentsManager.set(pos, employeeGroup);
+                switch (lastOperation) {
+                    case NEXT:
+                        departmentsManager.set(pos - 1, employeeGroup);
+                        break;
+                    case PREVIOUS:
+                        departmentsManager.set(pos + 1, employeeGroup);
+                        break;
+                    default:
+                        illegalState();
+                }
+                lastOperation = ListIteratorOperation.SET;
             }
 
             public void add(EmployeeGroup employeeGroup) {
-                departmentsManager.add(pos, employeeGroup);
+                if(size == 0) {
+                    departmentsManager.add(employeeGroup);
+                }
+                else{
+                    switch (lastOperation){
+                        case NONE:
+                            departmentsManager.add(0, employeeGroup);
+                            pos++;
+                            break;
+                        case NEXT:
+                            newElementPos = pos - 1;
+                            if(pos - 1 < 0)
+                                departmentsManager.add(0, employeeGroup);
+                            else
+                                departmentsManager.add(newElementPos, employeeGroup);
+                            pos++;
+                            break;
+                        case PREVIOUS:
+                            newElementPos = pos + 2;
+                            if(pos + 2 > size - 1)
+                                departmentsManager.add(employeeGroup);
+                            else
+                                departmentsManager.add(newElementPos, employeeGroup);
+                            break;
+                    }
+                }
+                lastOperation = ListIteratorOperation.ADD;
             }
         };
     }
@@ -482,13 +574,16 @@ public class DepartmentsManager implements GroupsManager{
         if(fromIndex < 0 || toIndex > size || fromIndex > toIndex)
             throw new IndexOutOfBoundsException();
         if(fromIndex == toIndex)
-            return null;
+            return new DepartmentsManager(null);
 
-        List<EmployeeGroup> subList = new ArrayList<>();
-        ListIterator<EmployeeGroup> iterator = listIterator(fromIndex);
+        //todo *FIXED* департамент но с заданными эмплоями
 
-        while(iterator.previousIndex() < toIndex)
-            subList.add(iterator.next());
+        DepartmentsManager subList = new DepartmentsManager(name, toIndex - fromIndex);
+
+        for (int i = fromIndex, j = 0; i < toIndex; i++, j++)
+            subList.employeeGroups[j] = employeeGroups[i];
+
+        subList.size = toIndex - fromIndex;
 
         return subList;
     }

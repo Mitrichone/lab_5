@@ -212,6 +212,23 @@ public class Project implements EmployeeGroup{
         return node;
     }
 
+    private void removeNode(Node node) {
+        if (node == head) {
+            node.next.prev = null;
+            head = node.next;
+        } else if (node == tail) {
+            node.prev.next = null;
+            tail = node.prev;
+        } else {
+            node.prev.next = node.next;
+            node.next.prev = node.prev;
+        }
+
+        node.prev = null;
+        node.next = null;
+        node.value = null;
+    }
+
     @Override
     public int size() {
         return size;
@@ -243,8 +260,10 @@ public class Project implements EmployeeGroup{
 
             public Employee next() {
                 Employee employee = node.value;
-                node = node.next;
-                pos++;
+                if(pos != size){
+                    node = node.next;
+                    pos++;
+                }
                 return employee;
             }
         };
@@ -313,68 +332,78 @@ public class Project implements EmployeeGroup{
 
     @Override
     public boolean addAll(int index, Collection<? extends Employee> c) {
-        if(index < 0 || index > size)
+        if(index < 0 || index > size - 1)
             throw new IndexOutOfBoundsException();
 
         if(c.size() == 0)
             return false;
-//todo логично написать добавление ручками после нода getNode(index)
+
+        //todo *FIXED* логично написать добавление ручками после нода getNode(index)
+        Node node = getNode(index);
+
         for (Employee o : c) {
-            add(index++, o);
+            if(!contains(o)){
+                Node newNode = new Node(o);
+                if(index > 0) {
+                    newNode.prev = node.prev;
+                    node.prev.next = newNode;
+                }
+                else
+                    head = newNode;
+
+                newNode.next = node;
+                node.prev = newNode;
+                size++;
+            }
         }
         return true;
     }
 
     @Override
     public boolean removeAll(Collection<?> c) {
-        Iterator<Employee> iterator = iterator();
         Node node = head;
         boolean changed = false;
-        //todo иди по своим нодам и проверяй есть ли value в c и если есть - удаляй ноду
-        while(iterator.hasNext()) {
-            Employee employee = iterator.next();
+        //todo *FIXED* иди по своим нодам и проверяй есть ли value в c и если есть - удаляй ноду
+        while(node != null) {
+            Node nextNode = node.next;
 
-            for (int i = 0; i < size; i++) {
-                if (employee.equals(node.value)) {
-                    remove(i);
-                    changed = true;
-                    break;
-                }
+            if(c.contains(node.value)){
+                removeNode(node);
+                changed = true;
             }
+            node = nextNode;
         }
         return changed;
     }
 
     @Override
     public boolean retainAll(Collection<?> c) {
-        //todo иди по своим нодам и проверяй есть ли value в c и если нет - удаляй ноду
-
-        boolean changed = false;
+        //todo *FIXED* иди по своим нодам и проверяй есть ли value в c и если нет - удаляй ноду
         Node node = head;
-        for(int i = 0; i < size; i++) {
-            Iterator<?> iterator = c.iterator();
-            boolean hasEmployee = false;
-            while (iterator.hasNext()) {
-                if (node.value.equals(iterator.next())) {
-                    hasEmployee = true;
-                    break;
-                }
-            }
-            if (!hasEmployee) {
-                remove(i);
+        boolean changed = false;
+        while(node != null) {
+            Node nextNode = node.next;
+
+            if(!c.contains(node.value)){
+                removeNode(node);
                 changed = true;
             }
-            node = node.next;
+            node = nextNode;
         }
         return changed;
     }
 
     @Override
     public void clear() {
-        //todo пробегаешься по нодам и делаешь ВСЕ ссылки null во всех нодах
+        //todo *FIXED* ручками делаешь каждый элемент = null
+        Node node = head;
+        while (node != tail){
+            Node nextNode = node.next;
+            removeNode(node);
+            node = nextNode;
+        }
         head = null;
         tail = null;
-        size = 0;
     }
 
     @Override
@@ -418,7 +447,7 @@ public class Project implements EmployeeGroup{
 
     @Override
     public Employee get(int index) {
-        if(index < 0 || index > size)
+        if(index < 0 || index > size - 1)
             throw new IndexOutOfBoundsException();
 
         return getNode(index).value;
@@ -426,6 +455,9 @@ public class Project implements EmployeeGroup{
 
     @Override
     public Employee set(int index, Employee element) {
+        if(index < 0 || index > size - 1)
+            throw new IndexOutOfBoundsException();
+
         Employee employee = getNode(index).value;
         getNode(index).value = element;
 
@@ -434,32 +466,31 @@ public class Project implements EmployeeGroup{
 
     @Override
     public void add(int index, Employee element) {
-        //todo учти, если index = 0 или size-1
-        if(index < 0 || index >= size)
+        //todo *FIXED* учти, если index = 0
+        if(index < 0 || index > size - 1)
             throw new IndexOutOfBoundsException();
-
-        //ListIterator<Employee> listIterator = listIterator(index);
 
         Node node = getNode(index);
         Node newNode = new Node(element);
 
-        newNode.prev = node.prev;
-        node.prev.next = newNode;
-
+        if(node != head)
+            newNode.prev = node.prev;
         newNode.next = node;
         node.prev = newNode;
-
         size++;
     }
 
     @Override
     public Employee remove(int index) {
-        //todo учти особенности удаления при index = 0 или size-1
+        //todo *FIXED* учти особенности удаления при index = 0 или size-1
+        if(index < 0 || index > size - 1)
+            throw new IndexOutOfBoundsException();
+
         Node node = getNode(index);
         Employee employee = node.value;
 
-        node.prev.next = node.next;
-        node.next.prev = node.prev;
+        removeNode(node);
+
         size--;
 
         return employee;
@@ -492,26 +523,50 @@ public class Project implements EmployeeGroup{
         return listIterator(0);
     }
 
-    //todo та же фигня, что и в департаменте
+    //todo *FIXED* та же фигня, что и в департаменте
     @Override
     public ListIterator<Employee> listIterator(int index) {
-        if(index < 0 || index > size)
+        if(index < 0 || index > size - 1)
             throw new IndexOutOfBoundsException();
 
         Project project = this;
         return new ListIterator<Employee>() {
             Node node = getNode(index);
             int pos = index;
+            Node newElement = null;
+            int newElementPos = 0;
+
+            ListIteratorOperation lastOperation = ListIteratorOperation.NONE;
+
+            private void illegalState(){
+                switch (lastOperation){
+                    case NONE:
+                        throw new IllegalStateException("Не были вызваны методы \"next()\" или \"previous()\"");
+                    case ADD:
+                        throw new IllegalStateException("Последний вызов: \"add()\"");
+                    case REMOVE:
+                        throw new IllegalStateException("Последний вызов: \"remove()\"");
+                }
+            }
 
             public boolean hasNext() {
-                return size > pos;
+                return pos < size - 1;
             }
 
             public Employee next() {
-                Employee employee = node.value;
-                node = node.next;
-                pos++;
-                return employee;
+                switch (lastOperation) {
+                    case ADD:
+                        lastOperation = ListIteratorOperation.NEXT;
+                        return node.value;
+                    default:
+                        lastOperation = ListIteratorOperation.NEXT;
+                        Employee employee = node.value;
+                        if(pos != size) {
+                            node = node.next;
+                            pos++;
+                        }
+                        return employee;
+                }
             }
 
             public boolean hasPrevious() {
@@ -519,10 +574,21 @@ public class Project implements EmployeeGroup{
             }
 
             public Employee previous() {
-                Employee employee = node.value;
-                node = node.prev;
-                pos--;
-                return employee;
+                switch (lastOperation) {
+                    case ADD:
+                        lastOperation = ListIteratorOperation.PREVIOUS;
+                        pos = newElementPos;
+                        node = newElement;
+                        return node.value;
+                    default:
+                        lastOperation = ListIteratorOperation.PREVIOUS;
+                        Employee employee = node.value;
+                        if (pos != -1){
+                            node = node.prev;
+                            pos--;
+                        }
+                        return employee;
+                }
             }
 
             public int nextIndex() {
@@ -534,32 +600,87 @@ public class Project implements EmployeeGroup{
             }
 
             public void remove() {
-                project.remove(pos);
+                switch (lastOperation) {
+                    case NEXT:
+                        pos--;
+                        project.removeNode(node.prev);
+                        break;
+                    case PREVIOUS:
+                        project.removeNode(node.next);
+                        break;
+                    default:
+                        illegalState();
+                }
+                lastOperation = ListIteratorOperation.REMOVE;
             }
 
             public void set(Employee employee) {
-                project.set(pos, employee);
+                switch (lastOperation) {
+                    case NEXT:
+                        node.prev.value = employee;
+                        break;
+                    case PREVIOUS:
+                        node.next.value = employee;
+                        break;
+                    default:
+                        illegalState();
+                }
+                lastOperation = ListIteratorOperation.SET;
             }
 
             public void add(Employee employee) {
-                project.add(employee);
+                if(size == 0) {
+                    project.add(employee);
+                }
+                else{
+                    switch (lastOperation){
+                        case NONE:
+                            project.add(0, employee);
+                            pos++;
+                            break;
+                        case NEXT:
+                            newElementPos = pos - 1;
+                            if(pos - 1 < 0)
+                                project.add(0, employee);
+                            else {
+                                project.add(newElementPos, employee);
+                                newElement = node.prev;
+                            }
+                            pos++;
+                            break;
+                        case PREVIOUS:
+                            newElementPos = pos + 2;
+                            if(pos + 2 > size - 1)
+                                project.add(employee);
+                            else{
+                                project.add(newElementPos, employee);
+                                newElement = node.next.next;
+                            }
+                            break;
+                    }
+                }
+                lastOperation = ListIteratorOperation.ADD;
             }
         };
     }
 
-    //todo та же фигня, что и в департаменте
+    //todo *FIXED* та же фигня, что и в департаменте
     @Override
     public List<Employee> subList(int fromIndex, int toIndex){
-        if(fromIndex < 0 || toIndex > size || fromIndex > toIndex)
+        if(fromIndex < 0 || toIndex > size - 1 || fromIndex > toIndex)
             throw new IndexOutOfBoundsException();
         if(fromIndex == toIndex)
-            return null;
+            return new Project(null);
 
-        List<Employee> subList = new ArrayList<>();
-        ListIterator<Employee> iterator = listIterator(fromIndex);
+        Project subList = new Project(this.name);
 
-        while(iterator.previousIndex() < toIndex)
-            subList.add(iterator.next());
+        Node node = getNode(fromIndex);
+
+        for (int i = fromIndex; i < toIndex; i++) {
+            subList.add(node.value);
+            node = node.next;
+        }
+        subList.size = toIndex - fromIndex;
 
         return subList;
     }

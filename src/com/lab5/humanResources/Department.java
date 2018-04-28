@@ -237,6 +237,14 @@ public class Department implements EmployeeGroup {
 
     //region Lab5 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
+    private void expand(int addSize){
+        if (this.size + addSize > this.employees.length){
+            Employee[] newEmployees = new Employee[this.size * 2 + addSize];
+            System.arraycopy(this.employees, 0, newEmployees, 0, this.size);
+            this.employees = newEmployees;
+        }
+    }
+
     @Override
     public int size() {
         return size;
@@ -266,7 +274,7 @@ public class Department implements EmployeeGroup {
             }
 
             public Employee next() {
-                return employees[pos++];
+                return employees[(pos > size - 1)?(--pos):(pos++)];
             }
         };
     }
@@ -286,11 +294,8 @@ public class Department implements EmployeeGroup {
         if(hasEmployee(employee.firstName, employee.secondName))
             return false;
 
-        if (this.size == this.employees.length){
-            Employee[] newEmployees = new Employee[this.size * 2];
-            System.arraycopy(this.employees, 0, newEmployees, 0, this.size);
-            this.employees = newEmployees;
-        }
+        expand(0);
+
         this.employees[this.size] = employee;
         this.size++;
         return true;
@@ -320,11 +325,7 @@ public class Department implements EmployeeGroup {
     public boolean addAll(Collection<? extends Employee> c) {
         boolean addAll = false;
 
-        if(size + c.size() > employees.length){
-            Employee[] newEmployees = new Employee[this.size * 2 + c.size()];
-            System.arraycopy(this.employees, 0, newEmployees, 0, this.size);
-            this.employees = newEmployees;
-        }
+        expand(c.size());
 
         for (Employee employee: c) {
             addAll |= add(employee);
@@ -334,44 +335,43 @@ public class Department implements EmployeeGroup {
 
     @Override
     public boolean addAll(int index, Collection<? extends Employee> c) {
-        if(index < 0 || index > size)
+        if(index < 0 || index > size - 1)
             throw new IndexOutOfBoundsException();
 
-        if(size + c.size() > employees.length){
-            Employee[] newEmployees = new Employee[employees.length * 2 + c.size()];
-            System.arraycopy(employees, 0, newEmployees, 0, size);
-            this.employees = newEmployees;
-        }
+        //////////////////////////////
+        int sizeCollection = c.size();
+        for (Employee o : c)
+            if(contains(o))
+                sizeCollection--;
+        //////////////////////////////
+
+        expand(sizeCollection);
 
         if (index < size)
-            System.arraycopy(employees, index, employees, index + c.size(),
-                    employees.length - (index + c.size()));
+            System.arraycopy(employees, index, employees, index + sizeCollection,
+                    employees.length - (index + sizeCollection));
 
         if(c.size() == 0)
             return false;
 
         for (Employee o : c) {
-            //Todo проверить сначала наличие сотрудника
-            employees[index++] = o;
-            size++;
+            //todo *FIXED* проверить сначала наличие сотрудника
+            if(!contains(o)) {
+                employees[index++] = o;
+                size++;
+            }
         }
         return true;
     }
 
     @Override
     public boolean removeAll(Collection<?> c) {
-        //todo foreach по c
-        Iterator<Employee> iterator = iterator();
+        //todo *FIXED* foreach по c
         boolean changed = false;
-        while(iterator.hasNext()) {
-            Employee employee = iterator.next();
-
-            for (int i = 0; i < size; i++) {
-                if (employee.equals(employees[i])) {
-                    remove(i);
-                    changed = true;
-                    break;
-                }
+        for (Object o: c) {
+            if(contains(o)){
+                remove(o);
+                changed = true;
             }
         }
         return changed;
@@ -379,19 +379,11 @@ public class Department implements EmployeeGroup {
 
     @Override
     public boolean retainAll(Collection<?> c) {
-        //todo foreach по c
+        //todo *FIXED* foreach по c
         boolean changed = false;
-        for(int i = 0; i < size; i++) {
-            Iterator<?> iterator = c.iterator();
-            boolean hasEmployee = false;
-            while (iterator.hasNext()) {
-                if (employees[i].equals(iterator.next())) {
-                    hasEmployee = true;
-                    break;
-                }
-            }
-            if (!hasEmployee) {
-                remove(i);
+        for (Employee o: employees) {
+            if(!c.contains(o)){
+                remove(o);
                 changed = true;
             }
         }
@@ -400,9 +392,10 @@ public class Department implements EmployeeGroup {
 
     @Override
     public void clear() {
-        //employees = new Employee[employees.length];
-        //todo ручками делаешь каждый элемент = null
-        //Arrays.fill(employees, null);
+        //todo *FIXED* ручками делаешь каждый элемент = null
+        for (int i = 0; i < size; i++) {
+            employees[i] = null;
+        }
         size = 0;
     }
 
@@ -441,7 +434,7 @@ public class Department implements EmployeeGroup {
 
     @Override
     public Employee get(int index) {
-        if(index < 0 || index > size)
+        if(index < 0 || index > size - 1)
             throw new IndexOutOfBoundsException();
 
         return employees[index];
@@ -449,6 +442,9 @@ public class Department implements EmployeeGroup {
 
     @Override
     public Employee set(int index, Employee element) {
+        if(index < 0 || index > size - 1)
+            throw new IndexOutOfBoundsException();
+
         Employee employee = employees[index];
         employees[index] = element;
 
@@ -457,9 +453,13 @@ public class Department implements EmployeeGroup {
 
     @Override
     public void add(int index, Employee element) {
-        if(index < 0 || index >= size)
+        if(index < 0 || index >= size - 1)
             throw new IndexOutOfBoundsException();
-        //todo расширь массив и вообще операцию expand вынеси в отдельный приватный метод
+
+        //todo *FIXED* расширь массив и вообще операцию expand вынеси в отдельный приватный метод
+
+        expand(0);
+
         if(index < size - 1)
             System.arraycopy(this.employees, index, this.employees, index + 1, this.size - (index + 1));
 
@@ -470,6 +470,9 @@ public class Department implements EmployeeGroup {
 
     @Override
     public Employee remove(int index) {
+        if(index < 0 || index > size - 1)
+            throw new IndexOutOfBoundsException();
+
         Employee employee = employees[index];
 
         if(index < this.size - 1)
@@ -505,19 +508,40 @@ public class Department implements EmployeeGroup {
 
     @Override
     public ListIterator<Employee> listIterator(int index) {
-        if(index < 0 || index > size)
+        if(index < 0 || index > size - 1)
             throw new IndexOutOfBoundsException();
 
         Department department = this;
         return new ListIterator<Employee>() {
             int pos = index;
+            int newElementPos = 0;
+
+            ListIteratorOperation lastOperation = ListIteratorOperation.NONE;
+
+            private void illegalState(){
+                switch (lastOperation){
+                    case NONE:
+                        throw new IllegalStateException("Не были вызваны методы \"next()\" или \"previous()\"");
+                    case ADD:
+                        throw new IllegalStateException("Последний вызов: \"add()\"");
+                    case REMOVE:
+                        throw new IllegalStateException("Последний вызов: \"remove()\"");
+                }
+            }
 
             public boolean hasNext() {
-                return employees.length > pos;
+                return pos < size - 1;
             }
 
             public Employee next() {
-                return employees[pos++];
+                switch (lastOperation) {
+                    case ADD:
+                        lastOperation = ListIteratorOperation.NEXT;
+                        return employees[pos];
+                    default:
+                        lastOperation = ListIteratorOperation.NEXT;
+                        return employees[(pos > size - 1)?(--pos):(pos++)];
+                }
             }
 
             public boolean hasPrevious() {
@@ -525,7 +549,15 @@ public class Department implements EmployeeGroup {
             }
 
             public Employee previous() {
-                return employees[pos--];
+                switch (lastOperation) {
+                    case ADD:
+                        lastOperation = ListIteratorOperation.PREVIOUS;
+                        pos = newElementPos;
+                        return employees[pos];
+                    default:
+                        lastOperation = ListIteratorOperation.PREVIOUS;
+                        return employees[(pos < 0)?(++pos):(pos--)];
+                }
             }
 
             public int nextIndex() {
@@ -535,38 +567,82 @@ public class Department implements EmployeeGroup {
             public int previousIndex() {
                 return pos - 1;
             }
-            //todo должен соответсвовать контракту
+            //todo *FIXED* должен соответсвовать контракту
             public void remove() {
-                department.remove(pos);
+                switch (lastOperation) {
+                    case NEXT:
+                        department.remove(--pos);
+                        break;
+                    case PREVIOUS:
+                        department.remove(pos + 1);
+                        break;
+                    default:
+                        illegalState();
+                }
+                lastOperation = ListIteratorOperation.REMOVE;
             }
 
             public void set(Employee employee) {
-                department.set(pos, employee);
+                switch (lastOperation) {
+                    case NEXT:
+                        department.set(pos - 1, employee);
+                        break;
+                    case PREVIOUS:
+                        department.set(pos + 1, employee);
+                        break;
+                    default:
+                        illegalState();
+                }
+                lastOperation = ListIteratorOperation.SET;
             }
 
             public void add(Employee employee) {
-                department.add(pos, employee);
+                if(size == 0) {
+                    department.add(employee);
+                }
+                else{
+                    switch (lastOperation){
+                        case NONE:
+                            department.add(0, employee);
+                            pos++;
+                            break;
+                        case NEXT:
+                            newElementPos = pos - 1;
+                            if(pos - 1 < 0)
+                                department.add(0, employee);
+                            else
+                                department.add(newElementPos, employee);
+                            pos++;
+                            break;
+                        case PREVIOUS:
+                            newElementPos = pos + 2;
+                            if(pos + 2 > size - 1)
+                                department.add(employee);
+                            else
+                                department.add(newElementPos, employee);
+                            break;
+                    }
+                }
+                lastOperation = ListIteratorOperation.ADD;
             }
         };
     }
 
     @Override
     public List<Employee> subList(int fromIndex, int toIndex){
-        if(fromIndex < 0 || toIndex > size || fromIndex > toIndex)
+        if(fromIndex < 0 || toIndex > size - 1 || fromIndex > toIndex)
             throw new IndexOutOfBoundsException();
         if(fromIndex == toIndex)
-            return null; //todo  пустой департамент
-        /*
-        Department dep = new Department(this.name, toIndex - fromIndex);
-        dep.employees;
-        dep.size;
-        */
+            return new Department(null); //todo *FIXED* пустой департамент
 
-        List<Employee> subList = new ArrayList<>(); //todo департамент но с заданными эмплоями
-        ListIterator<Employee> iterator = listIterator(fromIndex);
+        //todo *FIXED* департамент но с заданными эмплоями
 
-        while(iterator.previousIndex() < toIndex)
-            subList.add(iterator.next());
+        Department subList = new Department(this.name, toIndex - fromIndex);
+
+        for (int i = fromIndex, j = 0; i < toIndex; i++, j++)
+            subList.employees[j] = employees[i];
+
+        subList.size = toIndex - fromIndex;
 
         return subList;
     }

@@ -8,16 +8,16 @@ public interface EmployeeGroup extends List<Employee>{
     void setName(String name);
     String getName();
     default Employee[] sortedEmployees(){
-        Employee[] sortedEmployees = getEmployees();
+        Employee[] sortedEmployees = (Employee[]) toArray();
         Arrays.sort(sortedEmployees, Collections.reverseOrder());
         return sortedEmployees;
     }
-    Employee[] getEmployees(); //todo toArray()
+    //Employee[] getEmployees(); //todo *FIXED* toArray()
     Employee mostValuableEmployee();
     Employee getEmployee(String firstName, String secondName);
     boolean remove(String firstName, String secondName);
     //boolean remove(Employee employee);
-    int employeeQuantity(); //todo size()
+    //int employeeQuantity(); //todo *FIXED* size()
     int employeesQuantity(JobTitlesEnum jobTitle);
     boolean hasEmployee(String firstName, String secondName);
 
