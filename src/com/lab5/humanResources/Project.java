@@ -338,7 +338,6 @@ public class Project implements EmployeeGroup{
         if(c.size() == 0)
             return false;
 
-        //todo *FIXED* логично написать добавление ручками после нода getNode(index)
         Node node = getNode(index);
 
         for (Employee o : c) {
@@ -363,7 +362,6 @@ public class Project implements EmployeeGroup{
     public boolean removeAll(Collection<?> c) {
         Node node = head;
         boolean changed = false;
-        //todo *FIXED* иди по своим нодам и проверяй есть ли value в c и если есть - удаляй ноду
         while(node != null) {
             Node nextNode = node.next;
 
@@ -378,7 +376,6 @@ public class Project implements EmployeeGroup{
 
     @Override
     public boolean retainAll(Collection<?> c) {
-        //todo *FIXED* иди по своим нодам и проверяй есть ли value в c и если нет - удаляй ноду
         Node node = head;
         boolean changed = false;
         while(node != null) {
@@ -395,7 +392,6 @@ public class Project implements EmployeeGroup{
 
     @Override
     public void clear() {
-        //todo *FIXED* ручками делаешь каждый элемент = null
         Node node = head;
         while (node != tail){
             Node nextNode = node.next;
@@ -466,7 +462,6 @@ public class Project implements EmployeeGroup{
 
     @Override
     public void add(int index, Employee element) {
-        //todo *FIXED* учти, если index = 0
         if(index < 0 || index > size - 1)
             throw new IndexOutOfBoundsException();
 
@@ -482,7 +477,6 @@ public class Project implements EmployeeGroup{
 
     @Override
     public Employee remove(int index) {
-        //todo *FIXED* учти особенности удаления при index = 0 или size-1
         if(index < 0 || index > size - 1)
             throw new IndexOutOfBoundsException();
 
@@ -523,7 +517,6 @@ public class Project implements EmployeeGroup{
         return listIterator(0);
     }
 
-    //todo *FIXED* та же фигня, что и в департаменте
     @Override
     public ListIterator<Employee> listIterator(int index) {
         if(index < 0 || index > size - 1)
@@ -553,6 +546,7 @@ public class Project implements EmployeeGroup{
                 return pos < size - 1;
             }
 
+            //todo я перепутал, я знаю кто я =))) next() если нет следующего выбрасывает NoSuchElementException
             public Employee next() {
                 switch (lastOperation) {
                     case ADD:
@@ -572,7 +566,7 @@ public class Project implements EmployeeGroup{
             public boolean hasPrevious() {
                 return pos > 0;
             }
-
+            //todo я перепутал, я знаю кто я =))) previous() если нет предыдущего выбрасывает NoSuchElementException
             public Employee previous() {
                 switch (lastOperation) {
                     case ADD:
@@ -664,7 +658,6 @@ public class Project implements EmployeeGroup{
         };
     }
 
-    //todo *FIXED* та же фигня, что и в департаменте
     @Override
     public List<Employee> subList(int fromIndex, int toIndex){
         if(fromIndex < 0 || toIndex > size - 1 || fromIndex > toIndex)

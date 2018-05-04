@@ -355,7 +355,6 @@ public class Department implements EmployeeGroup {
             return false;
 
         for (Employee o : c) {
-            //todo *FIXED* проверить сначала наличие сотрудника
             if(!contains(o)) {
                 employees[index++] = o;
                 size++;
@@ -366,7 +365,6 @@ public class Department implements EmployeeGroup {
 
     @Override
     public boolean removeAll(Collection<?> c) {
-        //todo *FIXED* foreach по c
         boolean changed = false;
         for (Object o: c) {
             if(contains(o)){
@@ -379,7 +377,6 @@ public class Department implements EmployeeGroup {
 
     @Override
     public boolean retainAll(Collection<?> c) {
-        //todo *FIXED* foreach по c
         boolean changed = false;
         for (Employee o: employees) {
             if(!c.contains(o)){
@@ -392,7 +389,6 @@ public class Department implements EmployeeGroup {
 
     @Override
     public void clear() {
-        //todo *FIXED* ручками делаешь каждый элемент = null
         for (int i = 0; i < size; i++) {
             employees[i] = null;
         }
@@ -455,9 +451,6 @@ public class Department implements EmployeeGroup {
     public void add(int index, Employee element) {
         if(index < 0 || index >= size - 1)
             throw new IndexOutOfBoundsException();
-
-        //todo *FIXED* расширь массив и вообще операцию expand вынеси в отдельный приватный метод
-
         expand(0);
 
         if(index < size - 1)
@@ -567,7 +560,6 @@ public class Department implements EmployeeGroup {
             public int previousIndex() {
                 return pos - 1;
             }
-            //todo *FIXED* должен соответсвовать контракту
             public void remove() {
                 switch (lastOperation) {
                     case NEXT:
@@ -630,20 +622,16 @@ public class Department implements EmployeeGroup {
 
     @Override
     public List<Employee> subList(int fromIndex, int toIndex){
-        if(fromIndex < 0 || toIndex > size - 1 || fromIndex > toIndex)
+        if(fromIndex < 0 || toIndex > size - 1)
             throw new IndexOutOfBoundsException();
-        if(fromIndex == toIndex)
-            return new Department(null); //todo *FIXED* пустой департамент
-
-        //todo *FIXED* департамент но с заданными эмплоями
+        if(fromIndex > toIndex)
+            throw new IllegalArgumentException();
 
         Department subList = new Department(this.name, toIndex - fromIndex);
 
         for (int i = fromIndex, j = 0; i < toIndex; i++, j++)
             subList.employees[j] = employees[i];
-
         subList.size = toIndex - fromIndex;
-
         return subList;
     }
 

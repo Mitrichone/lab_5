@@ -12,12 +12,9 @@ public interface EmployeeGroup extends List<Employee>{
         Arrays.sort(sortedEmployees, Collections.reverseOrder());
         return sortedEmployees;
     }
-    //Employee[] getEmployees(); //todo *FIXED* toArray()
     Employee mostValuableEmployee();
     Employee getEmployee(String firstName, String secondName);
     boolean remove(String firstName, String secondName);
-    //boolean remove(Employee employee);
-    //int employeeQuantity(); //todo *FIXED* size()
     int employeesQuantity(JobTitlesEnum jobTitle);
     boolean hasEmployee(String firstName, String secondName);
 
