@@ -260,10 +260,10 @@ public class Project implements EmployeeGroup{
 
             public Employee next() {
                 Employee employee = node.value;
-                if(pos != size){
-                    node = node.next;
-                    pos++;
-                }
+                if (pos >= size)
+                    throw new NoSuchElementException();
+                node = node.next;
+                pos++;
                 return employee;
             }
         };
@@ -555,10 +555,10 @@ public class Project implements EmployeeGroup{
                     default:
                         lastOperation = ListIteratorOperation.NEXT;
                         Employee employee = node.value;
-                        if(pos != size) {
-                            node = node.next;
-                            pos++;
-                        }
+                        if (pos >= size)
+                            throw new NoSuchElementException();
+                        node = node.next;
+                        pos++;
                         return employee;
                 }
             }
@@ -577,10 +577,10 @@ public class Project implements EmployeeGroup{
                     default:
                         lastOperation = ListIteratorOperation.PREVIOUS;
                         Employee employee = node.value;
-                        if (pos != -1){
-                            node = node.prev;
-                            pos--;
-                        }
+                        if (pos < 0)
+                            throw new NoSuchElementException();
+                        node = node.prev;
+                        pos--;
                         return employee;
                 }
             }

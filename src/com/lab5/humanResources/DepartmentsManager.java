@@ -207,8 +207,9 @@ public class DepartmentsManager implements GroupsManager{
             }
 
             public EmployeeGroup next() {
-
-                return employeeGroups[(pos > size - 1)?(size-1):pos++];
+                if(pos >= size)
+                    throw new NoSuchElementException();
+                return employeeGroups[pos++];
             }
         };
     }
@@ -481,7 +482,9 @@ public class DepartmentsManager implements GroupsManager{
                         return employeeGroups[pos];
                     default:
                         lastOperation = ListIteratorOperation.NEXT;
-                        return employeeGroups[(pos > size - 1)?(--pos):(pos++)];
+                        if(pos >= size)
+                            throw new NoSuchElementException();
+                        return employeeGroups[pos++];
                 }
             }
 
@@ -497,7 +500,9 @@ public class DepartmentsManager implements GroupsManager{
                         return employeeGroups[pos];
                     default:
                         lastOperation = ListIteratorOperation.PREVIOUS;
-                        return employeeGroups[(pos < 0)?(++pos):(pos--)];
+                        if(pos < 0)
+                            throw new NoSuchElementException();
+                        return employeeGroups[pos--];
                 }
             }
 

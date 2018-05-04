@@ -274,7 +274,9 @@ public class Department implements EmployeeGroup {
             }
 
             public Employee next() {
-                return employees[(pos > size - 1)?(--pos):(pos++)];
+                if(pos >= size)
+                    throw new NoSuchElementException();
+                return employees[pos++];
             }
         };
     }
@@ -533,7 +535,9 @@ public class Department implements EmployeeGroup {
                         return employees[pos];
                     default:
                         lastOperation = ListIteratorOperation.NEXT;
-                        return employees[(pos > size - 1)?(--pos):(pos++)];
+                        if(pos >= size)
+                            throw new NoSuchElementException();
+                        return employees[pos++];
                 }
             }
 
@@ -549,7 +553,9 @@ public class Department implements EmployeeGroup {
                         return employees[pos];
                     default:
                         lastOperation = ListIteratorOperation.PREVIOUS;
-                        return employees[(pos < 0)?(++pos):(pos--)];
+                        if(pos < 0)
+                            throw new NoSuchElementException();
+                        return employees[pos--];
                 }
             }
 

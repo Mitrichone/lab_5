@@ -540,10 +540,11 @@ public class ProjectsManager implements GroupsManager {
                     default:
                         lastOperation = ListIteratorOperation.NEXT;
                         EmployeeGroup employeeGroup = node.value;
-                        if(pos != size) {
-                            node = node.next;
-                            pos++;
-                        }
+                        if (pos >= size)
+                            throw new NoSuchElementException();
+                        node = node.next;
+                        pos++;
+
                         return employeeGroup;
                 }
             }
@@ -562,10 +563,12 @@ public class ProjectsManager implements GroupsManager {
                     default:
                         lastOperation = ListIteratorOperation.PREVIOUS;
                         EmployeeGroup employeeGroup = node.value;
-                        if (pos != -1){
-                            node = node.prev;
-                            pos--;
-                        }
+                        if (pos < 0)
+                            throw new NoSuchElementException();
+
+                        node = node.prev;
+                        pos--;
+
                         return employeeGroup;
                 }
             }
